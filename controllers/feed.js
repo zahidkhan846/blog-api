@@ -4,17 +4,17 @@ exports.getPosts = (req, res, next) => {
       {
         id: 1,
         title: "First Post",
-        content: "This in my First post!",
+        content: "This is my First post!",
       },
       {
         id: 2,
         title: "Second Post",
-        content: "This in my Second post!",
+        content: "This is my Second post!",
       },
       {
         id: 3,
         title: "Third Post",
-        content: "This in my Third post!",
+        content: "This is my Third post!",
       },
     ],
   });
