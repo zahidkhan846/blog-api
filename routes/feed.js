@@ -1,12 +1,14 @@
 const express = require("express");
 const { body } = require("express-validator");
-const { getPosts, addPost, getSinglePost } = require("../controllers/feed");
+const {
+  getPosts,
+  addPost,
+  getSinglePost,
+  updateExistingPost,
+  deleteSinglePost,
+} = require("../controllers/feed");
 
 const route = express.Router();
-
-route.get("/post/:postId", getSinglePost);
-
-route.get("/posts", getPosts);
 
 route.post(
   "/add-post",
@@ -16,5 +18,20 @@ route.post(
   ],
   addPost
 );
+
+route.put(
+  "/post/:postId",
+  [
+    body("title").trim().isLength({ min: 5 }),
+    body("content").trim().isLength({ min: 5 }),
+  ],
+  updateExistingPost
+);
+
+route.get("/posts", getPosts);
+
+route.get("/post/:postId", getSinglePost);
+
+route.delete("/post/:postId", deleteSinglePost);
 
 module.exports = route;
