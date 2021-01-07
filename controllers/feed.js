@@ -1,5 +1,5 @@
-const { validationResult } = require("express-validator");
 const Post = require("../models/post");
+const { validationResult } = require("express-validator");
 
 exports.addPost = (req, res, next) => {
   const errors = validationResult(req);
@@ -177,5 +177,34 @@ const clearImage = (filePath) => {
   filePath = path.join(__dirname, "..", filePath);
   fs.unlink(filePath, (err) => console.log(err));
 };
+
+//PAGINATION LOGIC
+
+// exports.getPosts = (req, res, next) => {
+//   const currentPage = req.params.currentPage || 1;
+//   const itemsPerPage = 1;
+//   let totalItems;
+//   Post.find()
+//     .countDocuments()
+//     .then((postCount) => {
+//       totalItems = postCount;
+//       return Post.find()
+//         .skip((currentPage - 1) * 1)
+//         .limit(itemsPerPage);
+//     })
+//     .then((posts) => {
+//       res.status(200).json({
+//         message: "Successfully fetched all posts",
+//         posts: posts,
+//         totalItems: totalItems,
+//       });
+//     })
+//     .catch((err) => {
+//       if (!err.statusCade) {
+//         err.statusCade = 500;
+//       }
+//       next(err);
+//     });
+// };
 
 ////HELPER FUNCTION ABOVE////HELPER FUNCTION ABOVE////HELPER FUNCTION ABOVE////HELPER FUNCTION ABOVE////
