@@ -1,6 +1,6 @@
 const User = require("../models/user");
 const { validationResult } = require("express-validator");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 exports.signup = (req, res, next) => {
@@ -45,7 +45,7 @@ exports.login = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  let currentUser = null;
+  let currentUser;
 
   User.findOne({ email: email })
     .then((user) => {

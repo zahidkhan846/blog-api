@@ -8,6 +8,8 @@ const {
   deleteSinglePost,
 } = require("../controllers/feed");
 
+const isAuthenticated = require("../middleware/authentication");
+
 const route = express.Router();
 
 route.post(
@@ -28,7 +30,7 @@ route.put(
   updateExistingPost
 );
 
-route.get("/posts", getPosts);
+route.get("/posts", isAuthenticated, getPosts);
 
 route.get("/post/:postId", getSinglePost);
 
