@@ -83,3 +83,26 @@ exports.login = (req, res, next) => {
       next(err);
     });
 };
+
+exports.getUserInfo = (req, res, next) => {
+  const userId = req.params.userId;
+
+  User.findById(userId)
+    .then((user) => {
+      if (!user) {
+        const error = new Error("No user found!");
+        error.statusCode = 401;
+        throw error;
+      }
+      res.status(200).json({
+        user: user,
+        message: "User fetch successfull!",
+      });
+    })
+    .catch((err) => {
+      if (!err.statusCade) {
+        err.statusCade = 500;
+      }
+      next(err);
+    });
+};
