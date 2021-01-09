@@ -32,10 +32,10 @@ route.put(
   updateExistingPost
 );
 
-route.get("/posts", isAuthenticated, getPosts);
+route.get("/posts", getPosts);
 
 route.get("/post/:postId", getSinglePost);
 
-route.delete("/post/:postId", deleteSinglePost);
+route.delete("/post/:postId", isAuthenticated, deleteSinglePost);
 
 module.exports = route;

@@ -1,4 +1,5 @@
 const Post = require("../models/post");
+const User = require("../models/user");
 const { validationResult } = require("express-validator");
 
 exports.addPost = (req, res, next) => {
@@ -23,20 +24,34 @@ exports.addPost = (req, res, next) => {
   const imageUrl = req.file.path;
   const title = req.body.title;
   const content = req.body.content;
+  let author;
 
   const post = new Post({
     title: title,
     content: content,
-    author: "Zahid Khan",
+    author: req.userId,
     imageUrl: imageUrl,
   });
   post
     .save()
     .then((result) => {
+      return User.findById(req.userId);
+    })
+    .then((user) => {
+      console.log(user);
+      author = user;
+      user.posts.push(post);
+      return user.save();
+    })
+    .then((result) => {
       console.log(result);
       res.status(201).json({
         message: "Post created successfully",
-        post: result,
+        post: post,
+        author: {
+          _id: author._id,
+          userName: author.userName,
+        },
       });
     })
     .catch((err) => {
@@ -78,6 +93,11 @@ exports.updateExistingPost = (req, res, next) => {
       if (!post) {
         const error = new Error("Could not find post.");
         error.statusCade = 404;
+        throw error;
+      }
+      if (post.author.toString() !== req.userId) {
+        const error = new Error("Could not find User.");
+        error.statusCade = 403;
         throw error;
       }
 
@@ -145,6 +165,7 @@ exports.getSinglePost = (req, res, next) => {
 
 exports.deleteSinglePost = (req, res, next) => {
   const postId = req.params.postId;
+
   Post.findById(postId)
     .then((post) => {
       if (!post) {
@@ -153,8 +174,22 @@ exports.deleteSinglePost = (req, res, next) => {
         throw error;
       }
       //CHECK USEWR IS AUTHENTICATED//
+
+      if (post.author.toString() !== req.userId) {
+        const err = new Error("Unauthenticated User");
+        err.statusCode = 403;
+        throw err;
+      }
+
       clearImage(post.imageUrl);
       return Post.findByIdAndRemove(postId);
+    })
+    .then((result) => {
+      return User.findById(req.userId);
+    })
+    .then((user) => {
+      user.posts.pull(postId);
+      return user.save();
     })
     .then((result) => {
       console.log(result);
