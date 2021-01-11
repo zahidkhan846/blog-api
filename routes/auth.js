@@ -2,7 +2,6 @@ const express = require("express");
 const { signup, login, getUserInfo } = require("../controllers/auth");
 const { body } = require("express-validator");
 const User = require("../models/user");
-const isAuthenticated = require("../middleware/authentication");
 
 const route = express.Router();
 
@@ -27,7 +26,5 @@ route.put(
 );
 
 route.post("/login", login);
-
-route.get("/user/:userId", isAuthenticated, getUserInfo);
 
 module.exports = route;

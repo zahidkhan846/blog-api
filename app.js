@@ -69,5 +69,6 @@ mongoose
   .connect(MONGODB_URI)
   .then((result) => {
     app.listen(8080);
+    console.log("Server Connected!");
   })
   .catch((err) => console.log(err));

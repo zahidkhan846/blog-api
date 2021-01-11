@@ -38,13 +38,11 @@ exports.addPost = (req, res, next) => {
       return User.findById(req.userId);
     })
     .then((user) => {
-      console.log(user);
       author = user;
       user.posts.push(post);
       return user.save();
     })
     .then((result) => {
-      console.log(result);
       res.status(201).json({
         message: "Post created successfully",
         post: post,
