@@ -1,8 +1,9 @@
 const Post = require("../models/post");
 const User = require("../models/user");
 const { validationResult } = require("express-validator");
+const io = require("../middleware/socket.io");
 
-exports.addPost = (req, res, next) => {
+exports.addPost = async (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -24,7 +25,6 @@ exports.addPost = (req, res, next) => {
   const imageUrl = req.file.path;
   const title = req.body.title;
   const content = req.body.content;
-  let author;
 
   const post = new Post({
     title: title,
@@ -32,32 +32,32 @@ exports.addPost = (req, res, next) => {
     author: req.userId,
     imageUrl: imageUrl,
   });
-  post
-    .save()
-    .then((result) => {
-      return User.findById(req.userId);
-    })
-    .then((user) => {
-      author = user;
-      user.posts.push(post);
-      return user.save();
-    })
-    .then((result) => {
-      res.status(201).json({
-        message: "Post created successfully",
-        post: post,
-        author: {
-          _id: author._id,
-          userName: author.userName,
-        },
-      });
-    })
-    .catch((err) => {
-      if (!err.statusCade) {
-        err.statusCade = 500;
-      }
-      next(err);
+  try {
+    await post.save();
+    const user = await User.findById(req.userId);
+    user.posts.push(post);
+    await user.save();
+    io.getIO().emit("posts", {
+      action: "create",
+      post: {
+        ...post._doc,
+        author: { _id: req.userId, userName: user.userName },
+      },
     });
+    res.status(201).json({
+      message: "Post created successfully",
+      post: post,
+      author: {
+        _id: user._id,
+        userName: user.userName,
+      },
+    });
+  } catch (err) {
+    if (!err.statusCade) {
+      err.statusCade = 500;
+    }
+    next(err);
+  }
 };
 
 exports.updateExistingPost = (req, res, next) => {
@@ -122,26 +122,28 @@ exports.updateExistingPost = (req, res, next) => {
     });
 };
 
-exports.getPosts = (req, res, next) => {
-  Post.find()
-    .then((posts) => {
-      res.status(200).json({
-        message: "Successfully fetched all posts",
-        posts: posts,
-      });
-    })
-    .catch((err) => {
-      if (!err.statusCade) {
-        err.statusCade = 500;
-      }
-      next(err);
+exports.getPosts = async (req, res, next) => {
+  try {
+    const posts = await Post.find()
+      .populate("author", "-password")
+      .sort({ createdAt: -1 });
+    res.status(200).json({
+      message: "Successfully fetched all posts",
+      posts: posts,
     });
+  } catch (err) {
+    if (!err.statusCade) {
+      err.statusCade = 500;
+    }
+    next(err);
+  }
 };
 
 exports.getSinglePost = (req, res, next) => {
   const postId = req.params.postId;
 
   Post.findById(postId)
+    .populate("author", "-password")
     .then((post) => {
       if (!post) {
         const error = new Error("Could not find post.");
@@ -191,6 +193,7 @@ exports.deleteSinglePost = (req, res, next) => {
     })
     .then((result) => {
       console.log(result);
+      io.getIO().emit("delete", { post: postId });
       res.status(200).json({ message: "Post Deleted Successfully!" });
     })
     .catch((err) => {
